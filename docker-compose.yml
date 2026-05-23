@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  xnoppo-artwork:
+    build: .
+    container_name: xnoppo-artwork-studio
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+      # - "8000:8000" # Descomenta si el servidor Python de Xnoppo necesita exponerse por separado
+    environment:
+      # Entorno Next.js
+      - NODE_ENV=production
+      
+      # Variables de Integración Emby (para Artwork Studio)
+      - EMBY_URL=http://192.168.1.201:8096
+      - EMBY_API_KEY=pon_tu_api_key_aqui
+      - TMDB_API_KEY=pon_tu_api_key_aqui
+      
+      # Variables originales solicitadas por Xnoppo Python
+      - EMBY_SERVER_URL=http://192.168.1.201:8096
+    volumes:
+      # Mapeos de configuración o persistencia de datos (ajusta según necesites para Xnoppo)
+      # - ./xnoppo_config:/app/config
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
