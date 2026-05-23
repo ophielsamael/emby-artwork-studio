@@ -1,9 +1,13 @@
-# Emby Artwork Studio 🎨🎬
 
 <div align="center">
   <img src="public/logo.png" alt="Artwork Studio Logo" width="120" />
-</div>
 
+<p align="center">
+  <h1>🎬 Emby Artwork Studio</h1>
+</p>
+</div>
+<img width="1755" height="1352" alt="Screenshot 2026-05-24 001257" src="https://github.com/user-attachments/assets/ddcaf457-7ad1-4691-a520-2b4362259d5c" />
+<img width="1083" height="845" alt="Screenshot 2026-05-24 001501" src="https://github.com/user-attachments/assets/82e05d7b-6190-48f1-83dc-3028ce150970" />
 <p align="center">
   <strong>ES:</strong> Un estudio web completo para inyectar overlays y banners de alta calidad —4K, Dolby Vision, IMAX— y fondos personalizados directamente a tu servidor de Emby en segundos.<br>
   <strong>EN:</strong> A complete web studio to inject high-quality overlays and banners —4K, Dolby Vision, IMAX— and custom backdrops directly into your Emby server in seconds.
@@ -22,7 +26,7 @@ La aplicación interactúa directamente con la API REST oficial de tu servidor E
 3. **Aplicación de Fondos (Backdrops)**: Permite elegir fondos panorámicos de TMDb y subirlos directamente como fondo de pantalla de la película en Emby mediante el endpoint `/emby/Items/{Id}/Images/Backdrop/0` en formato Base64.
 
 ### 🛡️ Medidas de Seguridad y Blindaje
-Para que puedas subir y compartir este proyecto en tu GitHub público con total tranquilidad, se han implementado las siguientes protecciones de seguridad:
+GitHub público con total tranquilidad, se han implementado las siguientes protecciones de seguridad:
 * **Separación de Entorno (.env y .env.example)**: Las claves reales de API y direcciones IP se configuran localmente mediante variables de entorno. El repositorio contiene solo `.env.example` con ejemplos genéricos libres de credenciales.
 * **.gitignore Robusto**: Bloquea por completo cualquier archivo que contenga variables reales como `.env`, `.env.local`, `.env.production` y directorios temporales de Next.js (`.next/`).
 * **Proxy Seguro de Imágenes (`/api/image-proxy`)**: El frontend nunca se conecta directamente a tu servidor Emby para mostrar las imágenes de las carátulas. En su lugar, todas las imágenes pasan por un proxy interno de Next.js. De esta forma, **las IPs locales y los tokens de tu API de Emby jamás quedan expuestos** en las etiquetas `<img>` o en las peticiones de red del navegador del cliente.
@@ -78,7 +82,7 @@ The application interacts directly with your Emby server's official REST API:
 3. **Widescreen Backdrops**: Downloads backdrop layouts from TMDb and posts them as movie backdrops to Emby via the `/emby/Items/{Id}/Images/Backdrop/0` endpoint using Base64.
 
 ### 🛡️ Security & Hardening Features
-To allow you to share this project on a public GitHub repository safely, the following security measures have been built-in:
+the following security measures have been built-in:
 * **Separation of Environment (.env & .env.example)**: Real API keys and IP addresses are handled via local environment variables. The repository only tracks `.env.example` containing generic placeholders.
 * **Hardened .gitignore**: Blocks files containing real configurations (`.env`, `.env.local`, `.env.production`) and build directories (`.next/`) to prevent accidental leaks.
 * **Secure Image Proxy (`/api/image-proxy`)**: The frontend never communicates directly with your Emby server when loading movie images. Instead, all images pass through an internal Next.js proxy route. Consequently, **your local IPs and Emby API Keys are never exposed** in the client's image HTML tags or browser network requests.
