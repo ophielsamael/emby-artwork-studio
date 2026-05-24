@@ -13,6 +13,8 @@
   <strong>EN:</strong> A complete web studio to inject high-quality overlays and banners —4K, Dolby Vision, IMAX— and custom backdrops directly into your Emby server in seconds.
 </p>
 
+[Fork original](https://github.com/v1rusnl/Poster-Overlay-GUI)
+
 ---
 
 ## 🇪🇸 Descripción (Español)
