@@ -29,12 +29,13 @@ export const overlayOptions = [
 interface OverlaySelectorProps {
   value: string | null;
   onChange: (value: string | null) => void;
+  t: any;
 }
 
-export default function OverlaySelector({ value, onChange }: OverlaySelectorProps) {
+export default function OverlaySelector({ value, onChange, t }: OverlaySelectorProps) {
   return (
     <div className="flex flex-col gap-3 w-full">
-      <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Banners y Overlays</span>
+      <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">{t.bannersAndOverlays}</span>
       
       <select
         value={value || ""}
@@ -47,14 +48,14 @@ export default function OverlaySelector({ value, onChange }: OverlaySelectorProp
           backgroundSize: '1em' 
         }}
       >
-        <option value="">Sin Overlay</option>
+        <option value="">{t.noOverlay}</option>
         {overlayOptions.map(opt => (
           <option key={opt} value={opt}>{opt}</option>
         ))}
       </select>
 
       <p className="text-xs text-gray-500 mt-1 px-1">
-        Selecciona una de las 23 plantillas oficiales extraídas del repositorio original.
+        {t.selectOverlayDesc}
       </p>
     </div>
   );

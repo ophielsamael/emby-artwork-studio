@@ -6,6 +6,7 @@ import OverlaySelector from "../components/OverlaySelector";
 import { fetchEmbyMovies, fetchEmbyLibraries } from "../actions/emby";
 import { fetchTmdbPosters, fetchTmdbBackdrops } from "../actions/tmdb";
 import { getConfigStatus } from "../actions/config";
+import { translations, Language } from "../config/i18n";
 
 // Types
 interface Movie {
@@ -102,7 +103,8 @@ export default function Home() {
   const [settingsForm, setSettingsForm] = useState({
     EMBY_SERVER_URL: '',
     EMBY_API_KEY: '',
-    TMDB_API_KEY: ''
+    TMDB_API_KEY: '',
+    LANGUAGE: 'es' as Language
   });
 
   // Fetch real libraries and config from Server on mount
@@ -112,7 +114,10 @@ export default function Home() {
     if (stored) {
       try {
         const parsed = JSON.parse(stored);
-        setSettingsForm(parsed);
+        setSettingsForm({
+          ...parsed,
+          LANGUAGE: parsed.LANGUAGE || 'es'
+        });
       } catch (e) {}
     } else {
       setShowSettingsModal(true);
@@ -158,6 +163,8 @@ export default function Home() {
   const [tmdbBackdrops, setTmdbBackdrops] = useState<string[]>([]);
   const [isLoadingTmdb, setIsLoadingTmdb] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<'poster' | 'backdrop'>('poster');
+
+  const t = translations[settingsForm.LANGUAGE] || translations.es;
 
   // Modal Interactions
   const openModal = (movie: Movie) => {
@@ -305,9 +312,6 @@ export default function Home() {
         const overlayImg = new window.Image();
         overlayImg.src = overlaySrc;
         overlayImg.onload = () => {
-          // Draw overlay banner at top
-          // The exact original overlays are 1000 pixels wide and intended for the top/various parts, drawing at full size
-          // The C# code scales base to 1000x1500 and draws overlay matching dimensions
           ctx.drawImage(overlayImg, 0, 0, 1000, 1500);
           triggerDownloadLink();
         };
@@ -334,14 +338,11 @@ export default function Home() {
     
     if (!matchesSearch) return false;
 
-    switch (activeFilter) {
-      case "Con Overlay":
-        return movie.selectedOverlay !== null;
-      case "Originales":
-        return movie.selectedOverlay === null;
-      default:
-        return true;
-    }
+    if (activeFilter === "Todos" || activeFilter === "All" || activeFilter === t.filterAll) return true;
+    if (activeFilter === "Con Overlay" || activeFilter === "With Overlay" || activeFilter === t.filterWithOverlay) return movie.selectedOverlay !== null;
+    if (activeFilter === "Originales" || activeFilter === "Originals" || activeFilter === t.filterOriginals) return movie.selectedOverlay === null;
+    
+    return true;
   });
 
   if (!configStatus) {
@@ -375,7 +376,7 @@ export default function Home() {
             className="px-5 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-sm font-semibold transition-colors flex items-center gap-2"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/></svg>
-            Settings
+            {t.settings}
           </button>
         </div>
       </header>
@@ -394,12 +395,12 @@ export default function Home() {
           <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-transparent to-transparent"></div>
           
           <div className="absolute inset-0 flex flex-col justify-center px-8 md:px-16">
-            <span className="text-emerald-400 font-black tracking-[0.3em] uppercase text-xs mb-4">MOTOR DE EDICIÓN AVANZADO</span>
+            <span className="text-emerald-400 font-black tracking-[0.3em] uppercase text-xs mb-4">{t.advancedEditor}</span>
             <h2 className="text-5xl md:text-7xl font-black mb-4 text-white tracking-tighter leading-none">
                 ARTWORK <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-600">STUDIO</span>
             </h2>
             <p className="text-gray-300 text-sm md:text-lg max-w-xl font-medium leading-relaxed opacity-90">
-                Lleva la biblioteca de tu Home Theater al siguiente nivel. Aplica banners, efectos 4K, HDR10+ y Dolby Vision con precisión de pixel a todas tus películas y series.
+                {t.heroDescription}
             </p>
           </div>
         </div>
@@ -407,7 +408,7 @@ export default function Home() {
         {/* EMBY ARTWORK STUDIO MODULE */}
         <div className="w-full flex-1 flex flex-col">
           <div className="flex items-center gap-4 mb-6">
-             <h2 className="text-2xl font-bold tracking-wider uppercase text-white/90">Smart System: <span className="text-[#52b54b]">Artwork Studio</span></h2>
+             <h2 className="text-2xl font-bold tracking-wider uppercase text-white/90">{t.smartSystem} <span className="text-[#52b54b]">Artwork Studio</span></h2>
              <div className="flex-1 h-px bg-gradient-to-r from-white/10 to-transparent"></div>
           </div>
 
@@ -419,16 +420,16 @@ export default function Home() {
                
                {!isEmbyUrlConfigured ? (
                  <>
-                   <h3 className="text-xl font-bold text-orange-400">⚠️ Módulo de Carátulas Inactivo</h3>
+                   <h3 className="text-xl font-bold text-orange-400">{t.moduleInactive}</h3>
                    <p className="text-gray-400 max-w-xl">
-                     Primero debes configurar el servidor y las rutas de las librerías de tu Emby Server en la sección correspondiente para activar el Artwork Studio.
+                     {t.moduleInactiveDesc}
                    </p>
                  </>
                ) : (
                  <>
-                   <h3 className="text-xl font-bold text-orange-400">🔌 Conexión Establecida</h3>
+                   <h3 className="text-xl font-bold text-orange-400">{t.connectionEst}</h3>
                    <p className="text-gray-400 max-w-xl leading-relaxed">
-                     Conexión establecida con Emby, pero el Estudio de Carátulas requiere credenciales adicionales. Por favor, ve a la sección de Ajustes y añade la API Key de Emby y la API Key de TheMovieDb para poder buscar portadas alternativas y aplicar los overlays.
+                     {t.connectionEstDesc}
                    </p>
                    
                    <div className="flex flex-col gap-3 mt-4 text-left bg-black/40 p-5 rounded-xl border border-white/5 w-full max-w-md">
@@ -443,7 +444,7 @@ export default function Home() {
                          </div>
                        )}
                        <span className={`text-sm tracking-wide ${isEmbyKeyConfigured ? 'text-gray-400' : 'text-red-400 font-bold'}`}>
-                         API Key de Emby {!isEmbyKeyConfigured && "(Falta)"}
+                         {t.embyApiKey} {!isEmbyKeyConfigured && t.missing}
                        </span>
                      </div>
                      <div className="flex items-center gap-4">
@@ -457,7 +458,7 @@ export default function Home() {
                          </div>
                        )}
                        <span className={`text-sm tracking-wide ${isTmdbConfigured ? 'text-gray-400' : 'text-red-400 font-bold'}`}>
-                         API Key de TMDb {!isTmdbConfigured && "(Falta)"}
+                         {t.tmdbApiKey} {!isTmdbConfigured && t.missing}
                        </span>
                      </div>
                    </div>
@@ -465,7 +466,7 @@ export default function Home() {
                )}
 
                <button onClick={() => setShowSettingsModal(true)} className="mt-6 px-8 py-3 rounded-xl bg-orange-500/20 hover:bg-orange-500/30 border border-orange-500/50 text-orange-300 font-bold tracking-wider transition-all shadow-[0_0_15px_rgba(249,115,22,0.15)] hover:shadow-[0_0_25px_rgba(249,115,22,0.3)]">
-                 Configurar Credenciales
+                 {t.configCredentials}
                </button>
             </div>
           ) : (
@@ -494,7 +495,7 @@ export default function Home() {
             </span>
             <input
               type="text"
-              placeholder="Buscar películas o géneros..."
+              placeholder={t.searchPlaceholder}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full bg-white/5 border border-white/10 rounded-xl py-2 pl-9 pr-4 text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#52b54b]/50 focus:border-transparent transition-all"
@@ -516,7 +517,7 @@ export default function Home() {
         {/* Left Sidebar */}
         <aside className="w-64 bg-[#11131c]/40 border-r border-white/5 p-6 flex flex-col gap-8 hidden lg:flex">
           <div className="flex flex-col gap-2">
-            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Mi Contenido</span>
+            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">{t.myContent}</span>
             {libraries.map((lib) => (
               <button
                 key={lib.id}
@@ -536,10 +537,10 @@ export default function Home() {
           </div>
 
           <div className="flex flex-col gap-2">
-            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Herramientas</span>
+            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">{t.tools}</span>
             {[
-              { name: "Banners y Overlays", icon: "M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z", action: () => { setActiveFilter("Todos"); setSearchQuery(""); } },
-              { name: "Ajustes", icon: "M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z", action: () => setShowSettingsModal(true) },
+              { name: t.bannersAndOverlays, icon: "M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z", action: () => { setActiveFilter(t.filterAll); setSearchQuery(""); } },
+              { name: t.settings, icon: "M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z", action: () => setShowSettingsModal(true) },
             ].map((tool) => (
               <button
                 key={tool.name}
@@ -561,13 +562,13 @@ export default function Home() {
           {/* Header & Filter System */}
           <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between mb-8">
             <div>
-              <h1 className="text-3xl font-extrabold text-white tracking-tight">Películas de la Biblioteca</h1>
-              <p className="text-gray-400 text-sm mt-1">Personaliza carátulas y banners para tu servidor de medios.</p>
+              <h1 className="text-3xl font-extrabold text-white tracking-tight">{t.libraryMovies}</h1>
+              <p className="text-gray-400 text-sm mt-1">{t.libraryMoviesDesc}</p>
             </div>
             
             {/* Filter Buttons */}
             <div className="flex flex-wrap gap-2">
-              {["Todos", "Con Overlay", "Originales"].map((filter) => (
+              {[t.filterAll, t.filterWithOverlay, t.filterOriginals].map((filter) => (
                 <button
                   key={filter}
                   onClick={() => setActiveFilter(filter)}
@@ -589,8 +590,8 @@ export default function Home() {
               <svg className="w-12 h-12 text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
               </svg>
-              <h3 className="text-lg font-bold text-white">No se encontraron películas</h3>
-              <p className="text-gray-500 text-sm max-w-xs mt-1">Prueba a buscar con otra palabra clave o cambiar los filtros superiores.</p>
+              <h3 className="text-lg font-bold text-white">{t.noMoviesFound}</h3>
+              <p className="text-gray-500 text-sm max-w-xs mt-1">{t.noMoviesFoundDesc}</p>
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-4 gap-6">
@@ -673,7 +674,7 @@ export default function Home() {
             <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between bg-black/20">
               <div className="flex items-center gap-6">
                 <div className="flex items-center gap-2">
-                  <span className="text-[#52b54b] font-bold text-sm tracking-widest uppercase">Estudio de Carátulas</span>
+                  <span className="text-[#52b54b] font-bold text-sm tracking-widest uppercase">{t.artworkStudio}</span>
                   <span className="text-gray-600 hidden sm:inline">•</span>
                   <span className="text-white font-bold text-base truncate max-w-[200px] hidden sm:inline">{selectedMovie.title}</span>
                 </div>
@@ -682,13 +683,13 @@ export default function Home() {
                     onClick={() => setActiveTab('poster')}
                     className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all ${activeTab === 'poster' ? 'bg-white/10 text-white shadow-sm' : 'text-gray-500 hover:text-gray-300'}`}
                   >
-                    Póster Principal
+                    {t.mainPoster}
                   </button>
                   <button 
                     onClick={() => setActiveTab('backdrop')}
                     className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all ${activeTab === 'backdrop' ? 'bg-white/10 text-white shadow-sm' : 'text-gray-500 hover:text-gray-300'}`}
                   >
-                    Fondos (Backdrops)
+                    {t.backdrops}
                   </button>
                 </div>
               </div>
@@ -708,7 +709,7 @@ export default function Home() {
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
                   {/* Left Side: Live Preview (5 columns) */}
                   <div className="md:col-span-5 flex flex-col gap-4">
-                    <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Vista Previa del Arte</span>
+                    <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">{t.artworkPreview}</span>
                     
                     {/* Dynamic Poster Container */}
                     <div className={`relative aspect-[2/3] w-full rounded-2xl overflow-hidden border-4 bg-black/40 transition-all duration-300 ${getGlowClass(modalOverlay)}`}>
@@ -745,7 +746,7 @@ export default function Home() {
                           modalOverlay?.includes("HDR10+") ? "bg-blue-500 shadow-[0_0_8px_#3b82f6]" : "bg-emerald-500 shadow-[0_0_8px_#10b981]"
                         }`} />
                         <span className="text-xs font-bold text-white tracking-wide truncate">
-                          {modalOverlay || "Original / Sin Overlay"}
+                          {modalOverlay || t.originalNoOverlay}
                         </span>
                       </div>
                     </div>
@@ -762,7 +763,7 @@ export default function Home() {
                         <span>•</span>
                         <span>{selectedMovie.genre}</span>
                         <span>•</span>
-                        <span className="text-emerald-400 font-bold">Valoración: {selectedMovie.rating}</span>
+                        <span className="text-emerald-400 font-bold">{t.rating}: {selectedMovie.rating}</span>
                       </div>
                     </div>
 
@@ -771,11 +772,11 @@ export default function Home() {
                     {/* TMDb Alternatives Scrollable Grid */}
                     <div className="w-full flex flex-col gap-3">
                       <span className="text-xs font-semibold text-gray-400 tracking-wider uppercase">
-                        Alternativas de TMDb
+                        {t.tmdbAlternatives}
                       </span>
                       
                       {isLoadingTmdb ? (
-                        <div className="text-center text-sm text-gray-500 py-10 animate-pulse">Cargando pósters desde TMDb...</div>
+                        <div className="text-center text-sm text-gray-500 py-10 animate-pulse">{t.loadingTmdbPosters}</div>
                       ) : tmdbAlternatives.length > 0 ? (
                         <div className="w-full max-h-[320px] overflow-y-auto overflow-x-hidden pr-2 border border-gray-800/50 rounded-lg p-2 bg-gray-900/30">
                           <div className="grid grid-cols-3 gap-3 w-full auto-rows-max">
@@ -807,7 +808,7 @@ export default function Home() {
                           </div>
                         </div>
                       ) : (
-                        <div className="text-center text-sm text-gray-500 py-10">No se encontraron alternativas en TMDb</div>
+                        <div className="text-center text-sm text-gray-500 py-10">{t.noTmdbAlternatives}</div>
                       )}
                     </div>
 
@@ -817,6 +818,7 @@ export default function Home() {
                     <OverlaySelector 
                       value={modalOverlay} 
                       onChange={setModalOverlay} 
+                      t={t}
                     />
 
                   </div>
@@ -824,12 +826,12 @@ export default function Home() {
               ) : (
                 <div className="flex flex-col gap-6 animate-fade-in">
                   <div>
-                    <h2 className="text-2xl font-extrabold text-white tracking-tight">{selectedMovie.title} - Fondos</h2>
-                    <p className="text-gray-400 text-sm mt-1">Selecciona un backdrop panorámico y aplícalo directamente a tu servidor Emby.</p>
+                    <h2 className="text-2xl font-extrabold text-white tracking-tight">{selectedMovie.title} - {t.backdropsTitle}</h2>
+                    <p className="text-gray-400 text-sm mt-1">{t.backdropsDesc}</p>
                   </div>
                   
                   {isLoadingTmdb ? (
-                    <div className="text-center text-sm text-gray-500 py-20 animate-pulse">Cargando fondos desde TMDb...</div>
+                    <div className="text-center text-sm text-gray-500 py-20 animate-pulse">{t.loadingTmdbBackdrops}</div>
                   ) : tmdbBackdrops.length > 0 ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
                       {tmdbBackdrops.map((backdropPath, index) => {
@@ -853,7 +855,7 @@ export default function Home() {
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                               </svg>
-                              Aplicar Fondo
+                              {t.applyBackdrop}
                             </button>
                           </div>
                         );
@@ -861,7 +863,7 @@ export default function Home() {
                     </div>
                   ) : (
                     <div className="text-center text-sm text-gray-500 py-20 border border-dashed border-gray-800 rounded-2xl">
-                      No se encontraron fondos (backdrops) para esta película en TMDb.
+                      {t.noTmdbBackdrops}
                     </div>
                   )}
                 </div>
@@ -883,14 +885,14 @@ export default function Home() {
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                       </svg>
-                      <span>Procesando...</span>
+                      <span>{t.processing}</span>
                     </>
                   ) : (
                     <>
                       <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4-4m0 0l-4-4m4 4V4" />
                       </svg>
-                      <span>Descargar Arte Fusionado</span>
+                      <span>{t.downloadArtwork}</span>
                     </>
                   )}
                 </button>
@@ -902,14 +904,14 @@ export default function Home() {
                     disabled={isApplying}
                     className="px-6 py-2 rounded-lg text-sm font-semibold text-gray-300 hover:text-white transition-colors disabled:opacity-50"
                   >
-                    Cancelar
+                    {t.cancel}
                   </button>
                   <button 
                     onClick={handleApplyChanges}
                     disabled={isApplying}
                     className={`px-6 py-2 rounded-lg text-sm font-semibold text-white transition-all shadow-lg ${isApplying ? 'bg-gray-600 cursor-not-allowed' : 'bg-gradient-to-r from-[#52b54b] to-[#42953c] hover:shadow-[0_0_20px_rgba(82,181,75,0.4)]'}`}
                   >
-                    {isApplying ? 'Aplicando...' : 'Aplicar Cambios'}
+                    {isApplying ? t.applying : t.applyChanges}
                   </button>
                 </div>
               </div>
@@ -937,7 +939,7 @@ export default function Home() {
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
           <div className="w-full max-w-lg bg-[#0f111a] border border-white/10 rounded-3xl shadow-2xl overflow-hidden">
             <div className="px-6 py-4 border-b border-white/5 bg-black/40 flex justify-between items-center">
-              <h3 className="text-emerald-400 font-bold tracking-wider uppercase text-sm">Configuración de Conexión</h3>
+              <h3 className="text-emerald-400 font-bold tracking-wider uppercase text-sm">{t.connectionConfig}</h3>
               <button onClick={() => setShowSettingsModal(false)} className="text-gray-500 hover:text-white">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg>
               </button>
@@ -945,7 +947,18 @@ export default function Home() {
             
             <div className="p-6 flex flex-col gap-5">
               <div>
-                <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1 block">URL del Servidor Emby</label>
+                <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1 block">{t.language}</label>
+                <select
+                  value={settingsForm.LANGUAGE}
+                  onChange={(e) => setSettingsForm({...settingsForm, LANGUAGE: e.target.value as Language})}
+                  className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500/50 appearance-none"
+                >
+                  <option value="es">Español</option>
+                  <option value="en">English</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1 block">{t.embyServerUrl}</label>
                 <input 
                   type="text" 
                   value={settingsForm.EMBY_SERVER_URL}
@@ -955,7 +968,7 @@ export default function Home() {
                 />
               </div>
               <div>
-                <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1 block">Emby API Key</label>
+                <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1 block">{t.embyApiKeyLabel}</label>
                 <input 
                   type="password" 
                   value={settingsForm.EMBY_API_KEY}
@@ -965,12 +978,12 @@ export default function Home() {
                 />
               </div>
               <div>
-                <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1 block">TMDB API Key (Opcional)</label>
+                <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1 block">{t.tmdbApiKeyLabel}</label>
                 <input 
                   type="password" 
                   value={settingsForm.TMDB_API_KEY}
                   onChange={(e) => setSettingsForm({...settingsForm, TMDB_API_KEY: e.target.value})}
-                  placeholder="Para buscar portadas alternativas..."
+                  placeholder={t.tmdbApiKeyPlaceholder}
                   className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500/50"
                 />
               </div>
@@ -981,13 +994,13 @@ export default function Home() {
                 onClick={() => setShowSettingsModal(false)}
                 className="px-5 py-2.5 rounded-xl text-sm font-semibold text-gray-400 hover:text-white"
               >
-                Cancelar
+                {t.cancel}
               </button>
               <button 
                 onClick={saveSettings}
                 className="px-6 py-2.5 rounded-xl text-sm font-bold bg-emerald-500 text-white hover:bg-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.3)] transition-all"
               >
-                Guardar y Recargar
+                {t.saveAndReload}
               </button>
             </div>
           </div>
